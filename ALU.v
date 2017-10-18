@@ -103,7 +103,7 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 	
 	//-----------------------------------------------------------
 
-    always @(ALUControl, A, B) begin
+	always @(*) begin
         A_s <= A; B_s <= B;
 	    ALUResult <= 32'h0;
         Zero <= 1;
