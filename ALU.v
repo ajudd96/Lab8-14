@@ -102,6 +102,11 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 	parameter SLTU	= 5'b11100, MULTU = 5'b11101;
 	
 	//-----------------------------------------------------------
+	initial begin
+	   temp <= 0; upper <= 0; lower <= 0;
+	   product <= 0; registers <= 0; total <= 0;
+	end
+	//-----------------------------------------------------------
 
     always @(ALUControl, A, B) begin
         A_s <= A; B_s <= B;
