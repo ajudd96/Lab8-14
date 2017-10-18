@@ -11,32 +11,35 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
 	output reg MemRead;		// MemRead == 1 if lw, 0 if anything else
 	output reg MemtoReg;	// MemtoReg == 1 if lw, 0 if r-type instruction, X if sw or branch
 
-	output reg [3:0] ALUOp;	// Operation       | 'ALUOp' value
-                            // ==========================
-                            // addition (sw, lw, addi)  | 00000
-                            // subtraction              | 00001
-                            // determined by funct.     | 00010
-                            // madd_sub                 | 00011
-                            // move to lo/hi            | 00100
-                            // multiplication           | 00101  
-                            // Shift Left               | 00110
-                            // slt                      | 00111
-                            // Sign Extend halfword     | 01000
-                            // LUI                      | 01001
-                            // ANDI                     | 01010
-                            // ORI                      | 01011
-                            // XORI                     | 01100
-                            // SLTI                     | 01101
-                            // BEQ                      | 01110
-                            // BGTZ                     | 01111
-                            // BGEZ                     | 10000
-                            // BLEZ                     | 10001
-                            // BLTZ                     | 10010
-                            // BNE                      | 10011
-                            // n/a                      | 10100
-                            // n/a                      | 10101
-                            // n/a                      | 10110
-                            // etc...
+	output reg [3:0] ALUOp;	
+                        // Operation   	 | 'ALUOp' value
+                        // ==========================
+                        // MADD(Funct)        | 00000
+                        // subtraction               | 00001
+                        // determined by funct.     | 00010
+                        // MSUB(Funct)          | 00011
+                        // move to lo/hi            | 00100
+                        // multiplication           | 00101  
+                        // Shift Left                | 00110
+                        // slt                      | 00111
+                        // Sign Extend halfword     | 01000
+                        // LUI                        | 01001
+                        // ANDI                        | 01010
+                        // ORI                        | 01011
+                        // XORI                        | 01100
+                        // SLTI                        | 01101
+                        // BEQ                        | 01110
+                        // BGTZ                        | 01111
+                        // MFHI(Funct)                | 10000
+                        // MTHI(Funct)            | 10001
+                        // MFLO(Funct)         | 10010
+                        // MTLO(Funct)        | 10011
+                        // BNE                     | 10100
+                        // BLTZ _BGEZ     | 10101
+                        // BLEZ                         | 10110
+                        // addition (sw, lw, addi) | 10111
+                        // n/a                            | 11000
+                        // n/a                             | 11001
 
 	output reg MemWrite;		// MemWrite == 1 if sw and SS0 if anything else
 	output reg ALUSrc;			// ALUSrc == 1 if sw or lw and 0 if r-type or branch   
@@ -46,25 +49,18 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
 	output reg Jump;			// Jump == 1 if a jump instruction
 	//output reg FromHigh; // FromHigh == 1 if MVHI else FromHigh == 0
 
-    parameter 	RTYPE = 'b000_000, SW = 'h2B, SB = 'b101000, SH = 'b101001,
-    			LW = 'h23, LB = 'b100000, LH ='b100001, LUI = 'b001111,
-     	   	    BEQ = 'b000100, BNE = 'b000101, BGTZ = 'b000111, BLEZ = 'b000110, BLTZ = 'b000001, BGEZ = 'b000001,
+    parameter 	RTYPE = 'b000000, SW = 'b101011, SB = 'b101000, SH = 'b101001,
+    			LW = 'b100011, LB = 'b100000, LH ='b100001, LUI = 'b001111,
+     	   	    BEQ = 'b000100, BNE = 'b000101, BGTZ = 'b000111, BLEZ = 'b000110, BLTZ_BGEZ= 'b000001,
      	   	    J = 'b000010, JAL = 'b000011, 
-     	   	    ADDI = 'b001000, ADDIU = 'b001001, /* ANDI = 'b001001, why this? */ ORI = 'b001101, XORI = 'b001110, 
-     	   	    // SEH = 'b011111,
-				SLTI = 'b001010,
-                MADD_SUB = 'b011100,
-				
-				// Mubarak added:
-				SLTIU = 'b001_011,
-				ANDI = 'b001_100,
-				SEB_SEH = 'b011_111;
-				
-
+     	   	    ADDI = 'b001000, ADDIU = 'b001001, ANDI = 'b001100, ORI = 'b001101, XORI = 'b001110, 
+     	   	    SEH = 'b011111, SLTI = 'b001010,
+                MADD_SUB = 'b011100;
+                
+                // Mubarak added:
+   parameter        SLTIU = 'b001_011, SEB_SEH = 'b011_111;
     // RTYPE instructions: add, addu, and, jr, mfhi, mflo, mult, multu, nor, xor, or, slt, sll, srl(0-extended), sllv?, srlv?, monv?, movz?, rotrv?, sra?, srav?, sub, subu
     //		format: op[31:26], rs[25:21], rt[20:16], rd[15:11], shamt[10:6], funct[5:0]
-    //
-    // 
     // rotr vs srl differentiate using bit number 21
     
     always @(Op) begin
@@ -88,7 +84,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;
         		MemRead <= 1;
         		MemtoReg <= 1;
-        		ALUOp <= 'b00000;
+        		ALUOp <= 'b10111; // addition
         		MemWrite <= 0;
         		ALUSrc <= 1;
         		RegWrite <= 1;
@@ -103,7 +99,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;
         		MemRead <= 1;
         		MemtoReg <= 1;
-        		ALUOp <= 'b00000;	//add
+        		ALUOp <= 'b10111;	
         		MemWrite <= 0;
         		ALUSrc <= 1;	// using offset value
         		RegWrite <= 1;
@@ -118,7 +114,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;
         		MemRead <= 1;
         		MemtoReg <= 1;
-        		ALUOp <= 'b00000;	
+        		ALUOp <= 'b10111;	
         		MemWrite <= 0;
         		ALUSrc <= 1;	
         		RegWrite <= 1;
@@ -149,7 +145,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;
         		MemRead <= 0;
         		MemtoReg <= 0;	// don't care
-        		ALUOp <= 'b00000;
+        		ALUOp <= 'b10111;
         		MemWrite <= 1;
         		ALUSrc <= 1;
         		RegWrite <= 0;
@@ -164,7 +160,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;
         		MemRead <= 0;
         		MemtoReg <= 0;	// don't care
-        		ALUOp <= 'b00000;	// should add [rs] and offset[15-0]
+        		ALUOp <= 'b10111;	// should add [rs] and offset[15-0]
         		MemWrite <= 1;
         		ALUSrc <= 1;	// using offset value
         		RegWrite <= 0;
@@ -179,7 +175,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;
         		MemRead <= 0;
         		MemtoReg <= 0;	// don't care
-        		ALUOp <= 'b00000;	//  should add [rs] and offset[15-0]
+        		ALUOp <= 'b10111;	//  should add [rs] and offset[15-0]
         		MemWrite <= 1;
         		ALUSrc <= 1;	// using offset value
         		RegWrite <= 0;
@@ -210,7 +206,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 1;
         		MemRead <= 0;
         		MemtoReg <= 0;	// don't care
-        		ALUOp <= 'b10011;	
+        		ALUOp <= 'b10100;	
         		MemWrite <= 0;
         		ALUSrc <= 0;	
         		RegWrite <= 0;
@@ -240,7 +236,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 1;
         		MemRead <= 0;
         		MemtoReg <= 0;	// don't care
-        		ALUOp <= 'b10001;	
+        		ALUOp <= 'b10110;	
         		MemWrite <= 0;
         		ALUSrc <= 0;	
         		RegWrite <= 0;
@@ -250,27 +246,12 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Jump <= 0;
         	end
 
-        	BLTZ: begin
+        	BLTZ_BGEZ: begin
         		RegDst <= 0;	// don't care	
         		Branch <= 1;
         		MemRead <= 0;
         		MemtoReg <= 0;	// don't care
-        		ALUOp <= 'b10010;	
-        		MemWrite <= 0;
-        		ALUSrc <= 0;	
-        		RegWrite <= 0;
-        		//PCSrc <= 1;	
-        		//FromHigh <= 0;	// don't care
-        		SignExt <= 1;
-        		Jump <= 0;
-        	end
-
-        	BGEZ: begin
-        		RegDst <= 0;	// don't care	
-        		Branch <= 1;
-        		MemRead <= 0;
-        		MemtoReg <= 0;	// don't care
-        		ALUOp <= 'b10000;	
+        		ALUOp <= 'b10101;	
         		MemWrite <= 0;
         		ALUSrc <= 0;	
         		RegWrite <= 0;
@@ -286,7 +267,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;	// don't care
         		MemRead <= 0;	// don't care
         		MemtoReg <= 0;	// don't care
-        		ALUOp <= 'b00000;	// don't care
+        		ALUOp <= 'b10111;	// don't care
         		MemWrite <= 0;	
         		ALUSrc <= 0;	
         		RegWrite <= 0;
@@ -301,7 +282,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;	// don't care
         		MemRead <= 0;	// don't care
         		MemtoReg <= 0;	// don't care
-        		ALUOp <= 'b00000;	// don't care
+        		ALUOp <= 'b10111;	// don't care
         		MemWrite <= 0;	
         		ALUSrc <= 0;	
         		RegWrite <= 0;
@@ -319,7 +300,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;
         		MemRead <= 0;	// don't care
         		MemtoReg <= 0;
-        		ALUOp <= 'b00000;	// addition
+        		ALUOp <= 'b10111;	// addition
         		MemWrite <= 0;	
         		ALUSrc <= 1;	// use immediate value	
         		RegWrite <= 1;
@@ -334,7 +315,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;
         		MemRead <= 0;	// don't care
         		MemtoReg <= 0;
-        		ALUOp <= 'b00000;	
+        		ALUOp <= 'b10111;	
         		MemWrite <= 0;
         		ALUSrc <= 1;	
         		RegWrite <= 1;
@@ -379,7 +360,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Branch <= 0;
         		MemRead <= 0;	// don't care
         		MemtoReg <= 0;
-        		ALUOp <= 'b00101;	
+        		ALUOp <= 'b01100;	
         		MemWrite <= 0;	
         		ALUSrc <= 1;	// use immediate value	
         		RegWrite <= 1;
@@ -389,7 +370,7 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
         		Jump <= 0;
         	end
 
-        	SEB_SEH : begin
+        	SEH: begin
         		RegDst <= 1;	
         		Branch <= 0;
         		MemRead <= 0;	// don't care
@@ -434,22 +415,36 @@ module Control(Op, RegDst, Branch, MemRead, MemtoReg, ALUOp, MemWrite, ALUSrc, R
                 SignExt <= 0;   // don't care
                 Jump <= 0;
             end
-			
-			// Mubarak added:
-        	SLTIU: begin
-        		RegDst <= 0;	 
-        		Branch <= 0;
-        		MemRead <= 0;
-        		MemtoReg <= 0;
-        		ALUOp <= 'b10111; 
-        		MemWrite <= 0;	
-        		ALUSrc <= 1;
-        		RegWrite <= 1;
-        		//PCSrc <= 0;
-        		//FromHigh <= 0;
-        		SignExt <= 1;
-        		Jump <= 0;
-        	end
+            
+            SEB_SEH : begin
+                            RegDst <= 1;    
+                            Branch <= 0;
+                            MemRead <= 0;    // don't care
+                            MemtoReg <= 0;
+                            ALUOp <= 'b01000;    // sign extension 1/2 word
+                            MemWrite <= 0;    
+                            ALUSrc <= 0;    // use immediate value    
+                            RegWrite <= 1;
+                            //PCSrc <= 0;
+                            //FromHigh <= 0;
+                            SignExt <= 0;    // don't care
+                            Jump <= 0;
+                        end
+                        
+            SLTIU: begin
+                            RegDst <= 0;     
+                            Branch <= 0;
+                            MemRead <= 0;
+                            MemtoReg <= 0;
+                            ALUOp <= 'b10111; 
+                            MemWrite <= 0;    
+                            ALUSrc <= 1;
+                            RegWrite <= 1;
+                            //PCSrc <= 0;
+                            //FromHigh <= 0;
+                            SignExt <= 1;
+                            Jump <= 0;
+                        end
             
             default: begin  
                 RegDst <= 0;
