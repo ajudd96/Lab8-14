@@ -2,9 +2,11 @@
 
 
 module Control(
-               Op, Funct, rt, InstructionBit_6, InstructionBit_9, InstructionBit_21, // input regs
-               RegDst, Branch, MemRead, MemtoReg, MemWrite,// output signals
-               ALUSrc, RegWrite, SignExt, CondMov, ALUSrc1,
+               // input regs
+               Op, Funct, InstructionBit_6, InstructionBit_9, InstructionBit_21,  /*rt,*/ 
+              //Branch,MemRead, MemtoReg, MemWrite,
+              // output signals
+                RegDst, ALUSrc, RegWrite, SignExt, CondMov, ALUSrc1,
                /*Link, Link31*/ 
                ALUControl );    // output
 
@@ -14,16 +16,16 @@ module Control(
         input InstructionBit_6;         // to differentiate between ROTRV or SRLV
         input InstructionBit_9;         // to differentiate between SEB and SEH
         input InstructionBit_21;        // to differentiate between ROTR and SRL
-        input [4:0] rt;                 // to differentiate between BGEZ and BLTZ 
+        //input [4:0] rt;                        // to differentiate between BGEZ and BLTZ 
 
 	// Control Signals
 	output reg RegDst;	    // chooses between rt(RegDst == 0) and rd(RegDst ==1)
                             // for the WriteRegister address input to RegisterFile
-	output reg Branch;		// Branch == 1 if branch instruction, 0 if anything else
-	output reg MemRead;		// MemRead == 1 if lw, 0 if anything else
+	//output reg Branch;		// Branch == 1 if branch instruction, 0 if anything else
+	/*output reg MemRead;		// MemRead == 1 if lw, 0 if anything else
 	output reg MemtoReg;	// chooses between DM Read Data output(MemtoReg == 0)
                             // and ALUResult(MemtoReg == 1) for WriteData input to RegisterFile
-	output reg MemWrite;	// MemWrite == 1 if sw and 0 if anything else
+	output reg MemWrite;	// MemWrite == 1 if sw and 0 if anything else */
 	output reg ALUSrc;	    // chooses between R[rt](ALUSrc == 0) and immExt(ALUSrc == 1) for ALU input B
     output reg ALUSrc1;     // chooses between R[rs] (ALUSrc ==0) and sa(shift amount)(ALUSrc == 1) for ALU input A
 	output reg RegWrite;	// RegWrite == 1 if r-type or lw instruction and 0 if sw or branch 
@@ -33,7 +35,7 @@ module Control(
     //output reg Link31;    // Link31 == 1 if jump and link (jal). Together wih Link (And module)
     output reg CondMov;     // CondMov == 1 if movn or movz. This bit is ANDed with ALU ZeroFlag
                             // and ORed with RegWrite signal
-
+                            
     output reg [4:0] ALUControl; 
                     // Op   | 'ALUControl' value
                     // ==========================
@@ -88,10 +90,10 @@ module Control(
     always @(*) begin
         // initializing all output signals to zero
         RegDst <= 0;
-        Branch <= 0;
+        /*Branch <= 0;
         MemRead <= 0;
         MemtoReg <= 0;
-        MemWrite <= 0;
+        MemWrite <= 0;*/
         ALUSrc <= 0;
         ALUControl <= 'b00000;  
         CondMov <= 'b0;
@@ -105,10 +107,10 @@ module Control(
                 case(Funct)
                     ADD: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0; */
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -119,10 +121,10 @@ module Control(
                     end
                     SUB: begin
                         RegDst <= 1;
-                        Branch <= 0;
-                        MemRead <= 0;
+                        //Branch <= 0;
+                        /*MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -133,10 +135,10 @@ module Control(
                     end
                     AND: begin
                         RegDst <= 1;
-                        Branch <= 0;
-                        MemRead <= 0;
+                        //Branch <= 0;
+                        /*MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -147,10 +149,10 @@ module Control(
                     end
                     OR: begin
                         RegDst <= 1;
-                        Branch <= 0;
-                        MemRead <= 0;
+                        //Branch <= 0;
+                        /*MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -161,10 +163,10 @@ module Control(
                     end
                     XOR: begin
                         RegDst <= 1;
-                        Branch <= 0;
-                        MemRead <= 0;
+                        //Branch <= 0;
+                        /*MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -175,10 +177,10 @@ module Control(
                     end
                     NOR: begin
                         RegDst <= 1;
-                        Branch <= 0;
-                        MemRead <= 0;
+                        //Branch <= 0;
+                        /*MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -187,27 +189,13 @@ module Control(
                         CondMov <= 0;
                         ALUControl <= 'b01000;
                     end
-                    SLT: begin
-                                            RegDst <= 1;
-                                            Branch <= 0;
-                                            MemRead <= 0;
-                                            MemtoReg <= 1;
-                                            MemWrite <= 0;
-                                            ALUSrc <= 0;
-                                            ALUSrc1 <= 0;
-                                            RegWrite <= 1;   
-                                            SignExt <= 0;   // don't care
-                                            //Jump <= 0;
-                                            CondMov <= 0;
-                                            ALUControl <= 'b00111;
-                                        end
 
                     MULT: begin
                         RegDst <= 1;
-                        Branch <= 0;
-                        MemRead <= 0;
+                        //Branch <= 0;
+                        /*MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -218,10 +206,10 @@ module Control(
                     end
                     MULTU: begin
                         RegDst <= 1;
-                        Branch <= 0;
-                        MemRead <= 0;
+                        //Branch <= 0;
+                        /*MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -232,10 +220,10 @@ module Control(
                     end
                     MTHI: begin
                         RegDst <= 1;
-                        Branch <= 0;
-                        MemRead <= 0;
+                        //Branch <= 0;
+                        /*MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -246,10 +234,10 @@ module Control(
                     end
                     MTLO: begin
                         RegDst <= 1;
-                        Branch <= 0;
-                        MemRead <= 0;
+                        //Branch <= 0;
+                        /*MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -260,10 +248,10 @@ module Control(
                     end
                     MFHI: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -274,10 +262,10 @@ module Control(
                     end
                     MFLO: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -290,10 +278,10 @@ module Control(
                     SEB_SEH: begin
                         if(InstructionBit_9 == 'b0) begin    // means instruction is SEB
                             RegDst <= 1;
-                            Branch <= 0;
+                            /*Branch <= 0;
                             MemRead <= 0;
                             MemtoReg <= 1;
-                            MemWrite <= 0;
+                            MemWrite <= 0;*/
                             ALUSrc <= 0;
                             ALUSrc1 <= 0;
                             RegWrite <= 1;   
@@ -304,10 +292,10 @@ module Control(
                         end
                         else if(InstructionBit_9 == 'b1) begin    // means instruction is SEH
                             RegDst <= 1;
-                            Branch <= 0;
+                            /*Branch <= 0;
                             MemRead <= 0;
                             MemtoReg <= 1;
-                            MemWrite <= 0;
+                            MemWrite <= 0;*/
                             ALUSrc <= 0;
                             ALUSrc1 <= 0;
                             RegWrite <= 1;   
@@ -319,10 +307,10 @@ module Control(
                     end
                     SLL: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 1;   // shift amount
                         RegWrite <= 1;   
@@ -334,10 +322,10 @@ module Control(
                     ROTR_SRL: begin
                         if(InstructionBit_21 == 'b0) begin        // means instruction is SRL
                             RegDst <= 1;
-                            Branch <= 0;
+                            /*Branch <= 0;
                             MemRead <= 0;
                             MemtoReg <= 1;
-                            MemWrite <= 0;
+                            MemWrite <= 0;*/
                             ALUSrc <= 0;
                             ALUSrc1 <= 1;   // shift amount
                             RegWrite <= 1;   
@@ -348,10 +336,10 @@ module Control(
                         end
                         else if(InstructionBit_21 == 'b1) begin    // means instruction is ROTR
                             RegDst <= 1;
-                            Branch <= 0;
+                            /*Branch <= 0;
                             MemRead <= 0;
                             MemtoReg <= 1;
-                            MemWrite <= 0;
+                            MemWrite <= 0;*/
                             ALUSrc <= 0;
                             ALUSrc1 <= 1;   // shift amount
                             RegWrite <= 1;   
@@ -363,10 +351,10 @@ module Control(
                     end
                     SLLV: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -378,10 +366,10 @@ module Control(
                     ROTRV_SRLV: begin
                         if(InstructionBit_6 == 'b0) begin    // means the instruction is SRLV
                             RegDst <= 1;
-                            Branch <= 0;
+                            /*Branch <= 0;
                             MemRead <= 0;
                             MemtoReg <= 1;
-                            MemWrite <= 0;
+                            MemWrite <= 0;*/
                             ALUSrc <= 0;
                             ALUSrc1 <= 0;
                             RegWrite <= 1;   
@@ -392,10 +380,10 @@ module Control(
                         end
                         else if(InstructionBit_6 == 'b1) begin    // means the instruction is ROTRV
                             RegDst <= 1;
-                            Branch <= 0;
+                            /*Branch <= 0;
                             MemRead <= 0;
                             MemtoReg <= 1;
-                            MemWrite <= 0;
+                            MemWrite <= 0;*/
                             ALUSrc <= 0;
                             ALUSrc1 <= 0;
                             RegWrite <= 1;   
@@ -407,10 +395,10 @@ module Control(
                     end
                     SLT: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -421,10 +409,10 @@ module Control(
                     end
                     MOVN: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -435,10 +423,10 @@ module Control(
                     end
                     MOVZ: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -449,10 +437,10 @@ module Control(
                     end
                     SRA: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                       /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -463,10 +451,10 @@ module Control(
                     end
                     SRAV: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 1;   // shift amount
                         RegWrite <= 1;   
@@ -477,10 +465,10 @@ module Control(
                     end
                     SLTU: begin
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -491,10 +479,10 @@ module Control(
                     end
                     default begin       // AND instruction signals
                         RegDst <= 1;
-                        Branch <= 0;
+                        /*Branch <= 0;
                         MemRead <= 0;
                         MemtoReg <= 1;
-                        MemWrite <= 0;
+                        MemWrite <= 0;*/
                         ALUSrc <= 0;
                         ALUSrc1 <= 0;
                         RegWrite <= 1;   
@@ -505,11 +493,11 @@ module Control(
                     end
             endcase
         	end  
-  
+  /*
         // Load functions (differences handled in DMControl)
         	LW: begin
         		RegDst <= 0;
-        		Branch <= 0;
+        		//Branch <= 0;
         		MemRead <= 1;
         		MemtoReg <= 0;
         		MemWrite <= 0;
@@ -524,7 +512,7 @@ module Control(
 
         	LB: begin 	
         		RegDst <= 0;
-                Branch <= 0;
+                //Branch <= 0;
                 MemRead <= 1;
                 MemtoReg <= 0;
                 MemWrite <= 0;
@@ -725,14 +713,14 @@ module Control(
                 CondMov <= 0;
                 ALUControl <= 'b00000;  // don't care
         	end
-
+*/
         	// Immediate functions
         	ADDI: begin
                 RegDst <= 0;
-                Branch <= 0;
+                /*Branch <= 0;
                 MemRead <= 0;   // don't care
                 MemtoReg <= 1;
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 1;    // uses immediate value (immExt)
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
@@ -744,10 +732,10 @@ module Control(
 
         	ADDIU: begin
                 RegDst <= 0;
-                Branch <= 0;
+                /*Branch <= 0;
                 MemRead <= 0;   // don't care
                 MemtoReg <= 1;
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 1;    // uses immediate value (immExt)
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
@@ -759,10 +747,10 @@ module Control(
 
         	ANDI: begin
         		RegDst <= 0;
-                Branch <= 0;
+                /*Branch <= 0;
                 MemRead <= 0;   // don't care
                 MemtoReg <= 1;
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 1;    // uses immediate value (immExt)
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
@@ -774,10 +762,10 @@ module Control(
 
         	ORI: begin
         		RegDst <= 0;
-                Branch <= 0;
+                /*Branch <= 0;
                 MemRead <= 0;   // don't care
                 MemtoReg <= 1;
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 1;    // uses immediate value (immExt)
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
@@ -789,10 +777,10 @@ module Control(
 
         	XORI: begin
         		RegDst <= 0;
-                Branch <= 0;
+                /*Branch <= 0;
                 MemRead <= 0;   // don't care
                 MemtoReg <= 1;
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 1;    // uses immediate value (immExt)
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
@@ -804,10 +792,10 @@ module Control(
 
         	SLTI: begin
         		RegDst <= 0;
-                Branch <= 0;
+                /*Branch <= 0;
                 MemRead <= 0;   // don't care
                 MemtoReg <= 1;
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 1;    // uses immediate value (immExt)
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
@@ -820,10 +808,10 @@ module Control(
             // Multiply and Add/Sub (difference determined in ALU Control)
             MADD_SUB_MUL: begin
                 RegDst <= 0;    // don't care
-                Branch <= 0;
+                /*Branch <= 0;
                 MemRead <= 0; 
                 MemtoReg <= 0;  // don't care
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 0;
                 ALUSrc1 <= 0;
                 RegWrite <= 0;   
@@ -849,10 +837,10 @@ module Control(
             
             SEB_SEH: begin
                 RegDst <= 1;
-                Branch <= 0;
+                /*Branch <= 0;
                 MemRead <= 0;   // don;t care
                 MemtoReg <= 1;
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 1;    // use immediate value
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
@@ -869,10 +857,10 @@ module Control(
                         
             SLTIU: begin
                 RegDst <= 1;    // 0 or 1 ?
-                Branch <= 0;
+                /*Branch <= 0;
                 MemRead <= 0;  
                 MemtoReg <= 1;
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 1;    // use immediate value
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
@@ -886,10 +874,10 @@ module Control(
 
             default: begin // AND 
                 RegDst <= 1;
-                Branch <= 0;
+               /*Branch <= 0;
                 MemRead <= 0;
                 MemtoReg <= 1;
-                MemWrite <= 0;
+                MemWrite <= 0;*/
                 ALUSrc <= 0;
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
