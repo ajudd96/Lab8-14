@@ -54,7 +54,9 @@
 //
 // MULTU| 11101	
 // MULT	| 11110
-//
+// ADDU | 11111
+
+// Test
 // NOTE:-
 // SLT (i.e., set on less than): ALUResult is '32'h000000001' if A < B.
 // 
@@ -69,17 +71,18 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 	output reg Zero;	    // Zero=1 if ALUResult == 0
 	
 	// High/Lo Registers
-	reg [31:0] Hi, Lo;
+	// reg [31:0] Hi, Lo;
 	
 	// Variables
-	reg [4:0] temp;
-	reg [1:0] store;
-	reg [31:0] upper, lower;
+	
+	// reg [4:0] temp;
+	// reg [1:0] store;
+	// reg [31:0] upper, lower;
 	reg signed [31:0] A_s, B_s;
-	reg signed [63:0] product, registers, total;
+	reg signed [63:0] /*product, registers,*/ total;
     
 	// ALU Operations
-    parameter ADD = 5'b00010, SUB = 5'b00110, AND = 5'b000000;
+    parameter ADD = 5'b00010, SUB = 5'b00110, AND = 5'b000000, ADDU = 5'b11111;
     parameter OR = 5'b00001, SLT = 5'b00111;
     parameter SHL = 5'b00011, SHR = 5'b00100, XOR = 5'b00101;
     parameter NOR = 5'b01000, MUL = 5'b01001;
@@ -102,28 +105,43 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 	parameter SLTU	= 5'b11100, MULTU = 5'b11101;
 	
 	//-----------------------------------------------------------
+	initial begin
+	   ALUResult <= 32'h0; Zero <= 1;  // store <= 1;
+	    // Hi <= 0; Lo <= 0; temp <= 0; upper <= 0; lower <= 0;
+	    // product <= 0; registers <= 0; 
+	    total <= 0;
+	end
+	//-----------------------------------------------------------
 
-    always @(ALUControl, A, B) begin
+	always @(*) begin
         A_s <= A; B_s <= B;
-	    ALUResult <= 32'h0;
-        Zero <= 1;
-		store <= 1;
-		
+	    ALUResult <= 32'h0; Zero <= 1;  // store <= 1;
+	    // Hi <= 0; Lo <= 0; temp <= 0; upper <= 0; lower <= 0; 
+	    // product <= 0; registers <= 0; 
+	    total <= 0;
+	    
         case(ALUControl) 
 			// Originl Operations
             ADD: begin ALUResult <= A_s + B_s; end // Sign-extend for immediate
-            SUB: begin ALUResult <= A_s - B_s; end
+            ADDU: begin ALUResult <= A + B; end
+			SUB: begin ALUResult <= A_s - B_s; end
             AND: begin ALUResult <= A & B; end // Zero-extend for immediate
+            
             OR: begin ALUResult <= A | B; end // Zero-extend for immediate
+            
 			SLT: begin if(A_s < B_s) ALUResult <= 32'h1; end // Set Less than
 			SLTU: begin if(A < B) ALUResult <= 32'h1; end
+			
 			// Additional Operations
             XOR: begin ALUResult <= A ^ B; end
+            
             NOR: begin ALUResult <= ~(A | B); end
+            
             MUL: begin 
 				total <= A_s * B_s; 
 				ALUResult <= total[31:0]; // mul does not care about Hi, Lo
 			end
+			/*
 			MULT: begin 
 				total <= A_s * B_s; 
 				ALUResult <= total[31:0]; store <= 2; // Cares about Hi, Lo
@@ -133,8 +151,11 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 				ALUResult <= total[31:0]; store <= 2; // Cares about Hi, Lo
 			end
 			// (<< and >> inserts zeros)
-            SHL: begin ALUResult <= A << B[4:0]; end // Same as SLL
-            SHR: begin ALUResult <= A >> B[4:0]; end // Same as SRL
+            */
+            SHL: begin ALUResult <= B << A[4:0]; end // Same as SLL
+            
+            SHR: begin ALUResult <= B >> A[4:0]; end // Same as SRL
+			/*
 			// Comparison - 
 			//			ALUResult = 1 when branch condition not met
 			BEQ: begin if(!(A == B)) ALUResult <= 32'h1; end
@@ -146,8 +167,10 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 			// Complex Operations
 			MTHI: begin Hi <= A; store <= 0; end // Move to High
             MTLO: begin Lo <= A; store <= 0; end // Move to Low
-			MFHI: begin ALUResult <= Hi; store <= 0; end // Move from High
-			MFLO: begin ALUResult <= Lo; store <= 0; end // Move from Low
+            */
+			// MFHI: begin ALUResult <= Hi; store <= 0; end // Move from High
+			// MFLO: begin ALUResult <= Lo; store <= 0; end // Move from Low
+/*			
 			MADD: begin 
 				registers = {Hi, Lo}; 
 				product <= A_s * B_s; total <= registers + product;
@@ -168,14 +191,18 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 				upper <= A << temp; lower <= A >> temp;
 				ALUResult <= upper | lower;
 			end
+			*/
 			// Can be done with SLT and contents moved outside ALU
 			MOVN: begin if(B != 0) ALUResult <= A; end // True result of SLT
 			MOVZ: begin if(B == 0) ALUResult <= A; end // False result of SLT
 			// ----------------------------------------------
+			
 			SRA: begin // SRA and SRAV can use same state
-				temp <= B[4:0];
-				ALUResult <= A <<< temp; 
+				// temp = A[4:0];
+				ALUResult <= B >>> A[4:0]; 
 			end
+			/*
+			*/
 			// Default
             default: begin 
                 ALUResult <= 32'b0; 
@@ -183,6 +210,7 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
             end
         endcase
         
+/*
         if(ALUResult != 0) begin
             Zero <= 0;
         end
@@ -195,5 +223,7 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 			Hi <= total[63:32];
 			Lo <= total[31:0];
 		end
+*/
 	end
+
 endmodule
