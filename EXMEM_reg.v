@@ -43,6 +43,7 @@ input wire EX_ZeroFlag;
 input wire [31:0] EX_ALUResult;
 input wire [4:0]  EX_WriteRegister; 
 
+
 output reg MEM_RegWrite, MEM_CondMov;
 output reg MEM_ZeroFlag;
 output reg [31:0] MEM_ALUResult;

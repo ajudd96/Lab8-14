@@ -6,8 +6,9 @@
 module Cpu_tb();
 
 reg Clk, reset;
-
-CPU Cpu1(Clk, reset);
+wire [31:0] PCResult, EX_ALUResult, Hi, Lo;
+//module CPU(Clk, reset, PCResult, EX_ALUResult, Hi, Lo);
+CPU Cpu1(Clk, reset, PCResult, EX_ALUResult, Hi, Lo);
 
 initial begin
 		Clk <= 1'b0;

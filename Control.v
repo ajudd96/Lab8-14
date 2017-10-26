@@ -244,7 +244,7 @@ module Control(
                         SignExt <= 0;   // don't care
                         //Jump <= 0;
                         CondMov <= 0;
-                        ALUControl <= 'b01011;
+                        ALUControl <= 'b01010;
                     end
                     MTLO: begin
                         RegDst <= 1;
@@ -258,7 +258,7 @@ module Control(
                         SignExt <= 0;   // don't care
                         //Jump <= 0;
                         CondMov <= 0;
-                        ALUControl <= 'b01100;
+                        ALUControl <= 'b01011;
                     end
                     MFHI: begin
                         RegDst <= 1;
@@ -287,37 +287,6 @@ module Control(
                         //Jump <= 0;
                         CondMov <= 0;
                         ALUControl <= 'b01101;
-                    end
-
-                    SEB_SEH: begin
-                        if(InstructionBit_9 == 'b0) begin    // means instruction is SEB
-                            RegDst <= 1;
-                            /*Branch <= 0;
-                            MemRead <= 0;
-                            MemtoReg <= 1;
-                            MemWrite <= 0;*/
-                            ALUSrc2 <= 0;
-                            ALUSrc1 <= 0;
-                            RegWrite <= 1;   
-                            SignExt <= 0;   // don't care
-                            //Jump <= 0;
-                            CondMov <= 0;
-                            ALUControl <= 'b10110;                    // SEB control signal
-                        end
-                        else if(InstructionBit_9 == 'b1) begin    // means instruction is SEH
-                            RegDst <= 1;
-                            /*Branch <= 0;
-                            MemRead <= 0;
-                            MemtoReg <= 1;
-                            MemWrite <= 0;*/
-                            ALUSrc2 <= 0;
-                            ALUSrc1 <= 0;
-                            RegWrite <= 1;   
-                            SignExt <= 0;   // don't care
-                            //Jump <= 0;
-                            CondMov <= 0;
-                            ALUControl <= 'b10111;                    // SEH control SIGNAL
-                        end
                     end
                     SLL: begin
                         RegDst <= 1;
@@ -753,7 +722,7 @@ module Control(
                 ALUSrc2 <= 1;    // uses immediate value (immExt)
                 ALUSrc1 <= 0;
                 RegWrite <= 1;   
-                SignExt <= 0;   // unsigned   
+                SignExt <= 1;   // unsigned   
                 //Jump <= 0;
                 CondMov <= 0;    
                 ALUControl <= 'b11111;
@@ -849,26 +818,6 @@ module Control(
                         end
                 endcase   
             end
-            
-            SEB_SEH: begin
-                RegDst <= 1;
-                /*Branch <= 0;
-                MemRead <= 0;   // don;t care
-                MemtoReg <= 1;
-                MemWrite <= 0;*/
-                ALUSrc2 <= 1;    // use immediate value
-                ALUSrc1 <= 0;
-                RegWrite <= 1;   
-                SignExt <= 0;   // don't care
-                //Jump <= 0;
-                CondMov <= 0; 
-
-                if(InstructionBit_9 == 'b0) // means instruction is SEB
-                    ALUControl <= 'b10110;  // SEB control signal
-
-                else if(InstructionBit_9 == 'b1)    // means instruction is SEH
-                    ALUControl <= 'b10111;  // SEH control SIGNAL
-            end
                         
             SLTIU: begin
                 RegDst <= 1;    // 0 or 1 ?
@@ -886,6 +835,37 @@ module Control(
 
 
             end
+            
+                                SEB_SEH: begin
+                                    if(InstructionBit_9 == 'b0) begin    // means instruction is SEB
+                                        RegDst <= 1;
+                                        /*Branch <= 0;
+                                        MemRead <= 0;
+                                        MemtoReg <= 1;
+                                        MemWrite <= 0;*/
+                                        ALUSrc2 <= 0;
+                                        ALUSrc1 <= 0;
+                                        RegWrite <= 1;   
+                                        SignExt <= 0;   // don't care
+                                        //Jump <= 0;
+                                        CondMov <= 0;
+                                        ALUControl <= 'b10110;                    // SEB control signal
+                                    end
+                                    else if(InstructionBit_9 == 'b1) begin    // means instruction is SEH
+                                        RegDst <= 1;
+                                        /*Branch <= 0;
+                                        MemRead <= 0;
+                                        MemtoReg <= 1;
+                                        MemWrite <= 0;*/
+                                        ALUSrc2 <= 0;
+                                        ALUSrc1 <= 0;
+                                        RegWrite <= 1;   
+                                        SignExt <= 0;   // don't care
+                                        //Jump <= 0;
+                                        CondMov <= 0;
+                                        ALUControl <= 'b10111;                    // SEH control SIGNAL
+                                    end
+                                end
 
             default: begin // AND 
                 RegDst <= 1;
@@ -905,8 +885,6 @@ module Control(
 end
 endmodule
 
-
-        	
 
 
 

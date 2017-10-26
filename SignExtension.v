@@ -5,6 +5,7 @@
 // Module - SignExtension.v
 // Description - Sign extension module.
 ////////////////////////////////////////////////////////////////////////////////
+
 module SignExtension(in, out, SignExt);
 
     /* A 16-Bit input word */

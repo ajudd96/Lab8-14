@@ -1,17 +1,20 @@
 `timescale 1ns / 1ps
 
-module CPU(Clk, reset, PCResult, EX_ALUResult);
+module CPU(Clk, reset, PCResult, EX_ALUResult, Hi, Lo);
 
 	// CPU Input and Output declaration
 	input Clk, reset;
 	output PCResult;		
 	output EX_ALUResult;
+	output [31:0] Hi, Lo;
    
 	/* Instruction fetch stage */
     wire [31:0] PCAddress;
     wire [31:0] IF_Instruction;
     wire [31:0] PCResult;
 	wire [31:0] PCAddResult;
+	wire [63:0] ALUResult_64bit;
+	wire [31:0] Hi, Lo;
 	
 	ProgramCounter ProgramCounter_1(PCAddResult, PCResult, reset, Clk);
     InstructionMemory InstructionMemory_1(PCResult, IF_Instruction); 
@@ -111,8 +114,9 @@ module CPU(Clk, reset, PCResult, EX_ALUResult);
 	
 	wire [31:0] EX_ALUResult;
 	wire EX_ZeroFlag;
-	ALU32Bit ALU(EX_ALUControl, ALUSrcMuxResult_1, ALUSrcMuxResult_2, EX_ALUResult, EX_ZeroFlag);
-	
+	ALU32Bit ALU(EX_ALUControl, ALUSrcMuxResult_1, ALUSrcMuxResult_2, EX_ALUResult, EX_ZeroFlag, ALUResult_64bit);
+	assign Hi = ALUResult_64bit[63:32];
+	assign Lo = ALUResult_64bit[31:0];
 	wire [4:0] EX_WriteRegister;
 	Mux5Bit2To1 RegDstMux(EX_WriteRegister, EX_rt, EX_rd, EX_RegDst);
 	
