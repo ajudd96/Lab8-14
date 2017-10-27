@@ -62,19 +62,19 @@
 // 
 ////////////////////////////////////////////////////////////////////////////////
 
-module ALU32Bit(ALUControl, A, B, ALUResult, Zero, ALUResult_64bit);
+module ALU32Bit(ALUControl, A, B, Temp_ALUResult, Temp_Zero, Temp_64bit_ALUResult);
 
 	input [4:0] ALUControl; 
 	input [31:0] A, B;	    
 	
-	reg [31:0] Temp_ALUResult;
-	reg [63:0] Temp_64bit_ALUResult;
-	reg Temp_Zero;
- 	
+	output reg [31:0] Temp_ALUResult;
+	output reg [63:0] Temp_64bit_ALUResult;
+	output reg Temp_Zero;
+ 	/*
 	output [31:0] ALUResult;
 	output Zero;
 	output [63:0] ALUResult_64bit;
-   
+   */
 	// ALU Operations
     parameter ADD = 5'b00010, SUB = 5'b00110, AND = 5'b000000, ADDU = 5'b11111;
     parameter OR = 5'b00001, SLT = 5'b00111;
@@ -99,15 +99,15 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero, ALUResult_64bit);
 	parameter SLTU	= 5'b11100, MULTU = 5'b11101;
 
     initial begin
-    Temp_Zero <= 0;
+            Temp_Zero <= 0;
             Temp_ALUResult <= 0;
             Temp_64bit_ALUResult<= 0;
      end
      
-	always @(*) begin
-        Temp_Zero <= 0;
-	    Temp_ALUResult <= 0;
-	    Temp_64bit_ALUResult<= 0;
+	always @(ALUControl, A, B) begin
+//        Temp_Zero <= 0;
+//	    Temp_ALUResult <= 0;
+//	    Temp_64bit_ALUResult<= 0;
 	    
         case(ALUControl) 
 			// Originl Operations
@@ -196,8 +196,8 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero, ALUResult_64bit);
 */
 	end
 	
-    assign ALUResult = Temp_ALUResult;
-    assign Zero = Temp_Zero;
-    assign ALUResult_64bit = Temp_64bit_ALUResult;
+//    assign ALUResult = Temp_ALUResult;
+//    assign Zero = Temp_Zero;
+//    assign ALUResult_64bit = Temp_64bit_ALUResult;
 
 endmodule

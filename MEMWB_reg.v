@@ -38,6 +38,12 @@ output reg WB_CondMov;
 output reg [31:0] WB_ALUResult;
 output reg [4:0]  WB_WriteRegister;
 
+initial begin
+    WB_RegWrite = 0;
+    WB_ZeroFlag = 0;
+    WB_CondMov = 0;
+end
+
 always @(posedge Clk) begin
 	
 	// Control

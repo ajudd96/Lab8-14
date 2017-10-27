@@ -27,7 +27,11 @@ module CondMov(RegWrite, CondMov, Zero, Write);
     
     reg And1, And2;
     
-    always@(*) begin
+    initial begin
+        Write <= 0;
+    end
+    
+    always@(RegWrite, CondMov, Zero) begin
         And1 <= RegWrite & ~CondMov; 
         And2 <= CondMov  & Zero;
         Write <= And1 | And2;

@@ -86,21 +86,26 @@ module Control(
                 SLL = 'b000000, ROTR_SRL = 'b000010, SLLV = 'b000100, ROTRV_SRLV = 'b000110,
                 MOVN = 'b001011, MOVZ = 'b001010, ROTRV = 'b000110, SRA = 'b000011, SRAV = 'b000111, 
                 SLTU = 'b101011, MADD = 'b000000, MSUB = 'b000100, MUL = 'b000010, ADDU = 'b100001;           
+    initial begin 
+          // initializing all output signals to zero
+          RegDst = 0;
+          /*Branch <= 0;
+          MemRead <= 0;
+          MemtoReg <= 0;
+          MemWrite <= 0;*/
+          ALUSrc2 = 0;
+          ALUControl = 'b00000;  
+          CondMov = 'b0;
+          ALUSrc1 = 'b0;
+          RegWrite = 0;  
+          SignExt = 0;   
+          //Jump <= 0;
+    
+    end
 
-    always @(*) begin
-        // initializing all output signals to zero
-        RegDst <= 0;
-        /*Branch <= 0;
-        MemRead <= 0;
-        MemtoReg <= 0;
-        MemWrite <= 0;*/
-        ALUSrc2 <= 0;
-        ALUControl <= 'b00000;  
-        CondMov <= 'b0;
-        ALUSrc1 <= 'b0;
-        RegWrite <= 0;  
-        SignExt <= 0;   
-        //Jump <= 0;
+
+    always @(Op, Funct, InstructionBit_6, InstructionBit_9, InstructionBit_21) begin
+  
 
         case(Op)
         	RTYPE: begin

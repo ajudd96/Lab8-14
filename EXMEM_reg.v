@@ -49,6 +49,11 @@ output reg MEM_ZeroFlag;
 output reg [31:0] MEM_ALUResult;
 output reg [4:0]  MEM_WriteRegister;
 
+initial begin
+    MEM_RegWrite = 0;
+    MEM_CondMov = 0;
+    MEM_ZeroFlag = 0;
+end
 
 always @(posedge Clk) begin
 	

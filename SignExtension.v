@@ -20,7 +20,7 @@ module SignExtension(in, out, SignExt);
     /* Fill in the implementation here ... */
     reg [31:0] out;
     
-always @(*) begin
+always @(in, SignExt) begin
 	if (SignExt) begin
 		out[15:0] = in[15:0];
     	out[31:16] = {16{out[15]}};
