@@ -3,7 +3,7 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 10/23/2017 02:58:42 PM
+// Create Date: 10/24/2017 12:12:19 PM
 // Design Name: 
 // Module Name: CondMov
 // Project Name: 
@@ -19,21 +19,23 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
- // or (RegWrite_Or, WB_RegWrite, AndCondMovResult);
-   //and (BranchAndResult, MEM_Branch, MEM_ZeroFlag)
-  // and (AndCondMovResult, MEM_ZeroFlag, MEM_CondMov);
 
 module CondMov(RegWrite, CondMov, Zero, Write);
     
     input RegWrite, CondMov, Zero;
     output reg Write;
     
-    reg And1, And2;
+    //reg And1, And2;
     
-    always@(*) begin
-        And1 <= RegWrite & ~CondMov; 
-        And2 <= CondMov  & Zero;
-        Write <= And1 | And2;
+    initial begin
+        Write <= 0;
     end
     
+    always@(RegWrite, CondMov, Zero) begin
+        //And1 <= RegWrite & ~CondMov; 
+        //And2 <= CondMov  & Zero;
+        //Write <= And1 | And2;
+        Write <= RegWrite && ~CondMov;
+    end
+
 endmodule

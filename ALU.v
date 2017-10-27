@@ -26,8 +26,8 @@
 // AND  | 00000
 // OR   | 00001
 // ADD  | 00010
-// SHL  | 00011
-// SHR  | 00100
+// SLL  | 00011
+// SRL  | 00100
 // XOR  | 00101
 // SUB  | 00110
 // SLT  | 00111
@@ -54,34 +54,31 @@
 //
 // MULTU| 11101	
 // MULT	| 11110
+// ADDU | 11111
+
 // Test
 // NOTE:-
 // SLT (i.e., set on less than): ALUResult is '32'h000000001' if A < B.
 // 
 ////////////////////////////////////////////////////////////////////////////////
 
-module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
+module ALU32Bit(ALUControl, A, B, Temp_ALUResult, Temp_Zero, Temp_64bit_ALUResult);
 
-	input [4:0] ALUControl; // control bits for ALU operation
-	input [31:0] A, B;	    // inputs - Changed to signed input
-
-	output reg [31:0] ALUResult;	// answer - Changed to 64 bits (Oct. 2)
-	output reg Zero;	    // Zero=1 if ALUResult == 0
+	input [4:0] ALUControl; 
+	input [31:0] A, B;	    
 	
-	// High/Lo Registers
-	reg [31:0] Hi, Lo;
-	
-	// Variables
-	reg [4:0] temp;
-	reg [1:0] store;
-	reg [31:0] upper, lower;
-	reg signed [31:0] A_s, B_s;
-	reg signed [63:0] product, registers, total;
-    
+	output reg [31:0] Temp_ALUResult;
+	output reg [63:0] Temp_64bit_ALUResult;
+	output reg Temp_Zero;
+ 	/*
+	output [31:0] ALUResult;
+	output Zero;
+	output [63:0] ALUResult_64bit;
+   */
 	// ALU Operations
-    parameter ADD = 5'b00010, SUB = 5'b00110, AND = 5'b000000;
+    parameter ADD = 5'b00010, SUB = 5'b00110, AND = 5'b000000, ADDU = 5'b11111;
     parameter OR = 5'b00001, SLT = 5'b00111;
-    parameter SHL = 5'b00011, SHR = 5'b00100, XOR = 5'b00101;
+    parameter SLL = 5'b00011, SRL = 5'b00100, XOR = 5'b00101;
     parameter NOR = 5'b01000, MUL = 5'b01001;
 	
 	// More Complex Operations
@@ -100,47 +97,41 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 	
 	// Unsigned
 	parameter SLTU	= 5'b11100, MULTU = 5'b11101;
-	
-	//-----------------------------------------------------------
-	initial begin
-	   ALUResult <= 32'h0; Zero <= 1; store <= 1;
-	   Hi <= 0; Lo <= 0; temp <= 0; upper <= 0; lower <= 0;
-	   product <= 0; registers <= 0; total <= 0;
-	end
-	//-----------------------------------------------------------
 
-	always @(*) begin
-        A_s <= A; B_s <= B;
-	    ALUResult <= 32'h0; Zero <= 1; store <= 1;
-	    Hi <= 0; Lo <= 0; temp <= 0; upper <= 0; lower <= 0; 
-	    product <= 0; registers <= 0; total <= 0;
+    initial begin
+            Temp_Zero <= 0;
+            Temp_ALUResult <= 0;
+            Temp_64bit_ALUResult<= 0;
+     end
+     
+	always @(ALUControl, A, B) begin
+//        Temp_Zero <= 0;
+//	    Temp_ALUResult <= 0;
+//	    Temp_64bit_ALUResult<= 0;
 	    
         case(ALUControl) 
 			// Originl Operations
-            ADD: begin ALUResult <= A_s + B_s; end // Sign-extend for immediate
-            SUB: begin ALUResult <= A_s - B_s; end
-            AND: begin ALUResult <= A & B; end // Zero-extend for immediate
-            OR: begin ALUResult <= A | B; end // Zero-extend for immediate
-			SLT: begin if(A_s < B_s) ALUResult <= 32'h1; end // Set Less than
-			SLTU: begin if(A < B) ALUResult <= 32'h1; end
-			// Additional Operations
-            XOR: begin ALUResult <= A ^ B; end
-            NOR: begin ALUResult <= ~(A | B); end
+            ADD: Temp_ALUResult = $signed(A) + $signed(B); 
+            ADDU: Temp_ALUResult = A + B;
+			SUB: Temp_ALUResult = $signed(A) - $signed(B);
+            AND: Temp_ALUResult = A & B;
+            OR: Temp_ALUResult = A | B;
+			SLT: Temp_ALUResult = $signed(A) < $signed(B);
+			SLTU: Temp_ALUResult = A < B; 
+            XOR: Temp_ALUResult = A ^ B;
+            NOR: Temp_ALUResult = ~(A | B);
             MUL: begin 
-				total <= A_s * B_s; 
-				ALUResult <= total[31:0]; // mul does not care about Hi, Lo
+				Temp_64bit_ALUResult = $signed(A) * $signed(B); 
+				Temp_ALUResult = Temp_64bit_ALUResult[31:0]; // mul does not care about Hi, Lo
 			end
-			MULT: begin 
-				total <= A_s * B_s; 
-				ALUResult <= total[31:0]; store <= 2; // Cares about Hi, Lo
-			end
-			MULTU: begin 
-				total <= A * B; 
-				ALUResult <= total[31:0]; store <= 2; // Cares about Hi, Lo
-			end
+			
+			MULT: Temp_64bit_ALUResult = $signed(A) * $signed(B);
+			MULTU: Temp_64bit_ALUResult = $unsigned(A) * $unsigned(B);
 			// (<< and >> inserts zeros)
-            SHL: begin ALUResult <= A << B[4:0]; end // Same as SLL
-            SHR: begin ALUResult <= A >> B[4:0]; end // Same as SRL
+            
+            SLL: Temp_ALUResult = B << A;
+            SRL: Temp_ALUResult = B >> A;
+			/*
 			// Comparison - 
 			//			ALUResult = 1 when branch condition not met
 			BEQ: begin if(!(A == B)) ALUResult <= 32'h1; end
@@ -150,49 +141,50 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 			BLTZ: begin if(!(A[31])) ALUResult <= 32'h1; end
 			BNE: begin if(!(A != B)) ALUResult <= 32'h1; end
 			// Complex Operations
-			MTHI: begin Hi <= A; store <= 0; end // Move to High
-            MTLO: begin Lo <= A; store <= 0; end // Move to Low
-			MFHI: begin ALUResult <= Hi; store <= 0; end // Move from High
-			MFLO: begin ALUResult <= Lo; store <= 0; end // Move from Low
-			MADD: begin 
-				registers = {Hi, Lo}; 
-				product <= A_s * B_s; total <= registers + product;
-				ALUResult <= total[32:0]; 
-				store <= 2; 
-			end
-			MSUB: begin
-				registers = {Hi, Lo};
-				product <= A_s * B_s; total <= registers - product;
-				ALUResult <= total[32:0]; 
-				store <= 2;
-			end
+			*/
+			MTHI: Temp_64bit_ALUResult[63:32] = $signed(A); 
+            MTLO: Temp_64bit_ALUResult[31:0] = $signed(A); 
+            
+            MFHI: Temp_ALUResult = $signed(Temp_64bit_ALUResult[63:32]); // Move from High
+			MFLO: Temp_ALUResult = $signed(Temp_64bit_ALUResult[31:0]); // Move from Low
+			
+			MADD: Temp_64bit_ALUResult = $signed(Temp_64bit_ALUResult) + ( $signed(A) * $signed(B) ); 
+			
+			MSUB: Temp_64bit_ALUResult = $signed(Temp_64bit_ALUResult) - ( $signed(A) * $signed(B) ); 
 			// Other Operations
-			SEB: begin ALUResult <= {{24{B[7]}}, B[7:0]}; end 
-			SEH: begin ALUResult <= {{16{B[15]}}, B[15:0]}; end
-			ROTR: begin // ROTR and ROTRV can use came state
-				temp <= B[4:0] - 1;
-				upper <= A << temp; lower <= A >> temp;
-				ALUResult <= upper | lower;
-			end
+			SEB: Temp_ALUResult = {{24{B[7]}}, B[7:0]};
+			/*
+			begin
+                    Temp_ALUResult[7:0] = B[7:0];
+                    Temp_ALUResult[31:8] = {24{B[7]}};
+                end
+                */
+            SEH: Temp_ALUResult = {{16{B[15]}}, B[15:0]};
+            /*begin
+                    Temp_ALUResult[15:0] = B[15:0];
+                    Temp_ALUResult[31:16] = {16{B[15]}};
+                end */
+
+			// {32{1'b0}}, (A << 32-B) | (A >> B)}
+			ROTR: Temp_ALUResult = { {32{1'b0}}, (B << 32-A[4:0]) | (B >> A[4:0])};
+			
 			// Can be done with SLT and contents moved outside ALU
-			MOVN: begin if(B != 0) ALUResult <= A; end // True result of SLT
-			MOVZ: begin if(B == 0) ALUResult <= A; end // False result of SLT
+			MOVN: if(B != 0) Temp_ALUResult <= A; // how to set flag to value with out getting changed
+			MOVZ: if(B == 0) Temp_ALUResult <= A; // how to set flag to value with out getting changed
 			// ----------------------------------------------
-			SRA: begin // SRA and SRAV can use same state
-				temp <= B[4:0];
-				ALUResult <= A <<< temp; 
-			end
+			
+			SRA: Temp_ALUResult <= B >>> A; 
+			
+			/*
+			*/
 			// Default
-            default: begin 
-                ALUResult <= 32'b0; 
-                Zero <= 1;
-            end
+            default: Temp_ALUResult = 32'bX;
         endcase
         
-        if(ALUResult != 0) begin
-            Zero <= 0;
-        end
-		
+
+        if(Temp_ALUResult == 0) Temp_Zero <= 1;
+
+/*		
 		if(store == 1) begin
 			Hi <= 32'h0;
 			Lo <= ALUResult;
@@ -201,5 +193,11 @@ module ALU32Bit(ALUControl, A, B, ALUResult, Zero);
 			Hi <= total[63:32];
 			Lo <= total[31:0];
 		end
+*/
 	end
+	
+//    assign ALUResult = Temp_ALUResult;
+//    assign Zero = Temp_Zero;
+//    assign ALUResult_64bit = Temp_64bit_ALUResult;
+
 endmodule
