@@ -7,12 +7,12 @@ Percent Effort:
 	Barak Hassan - 33 % 
 */
 
-module CPU(Clk, reset, PCResult, EX_ALUResult, Hi, Lo);
+module CPU(Clk, reset, PCResult, EX_ALUResult, Hi, Lo, WB_ALUResult);
 
 	// CPU Input and Output declaration
 	input Clk, reset;
 	output PCResult;		
-	output EX_ALUResult;
+	output EX_ALUResult, WB_ALUResult;
 	output [31:0] Hi, Lo;
    
 	/* Instruction fetch stage */
@@ -121,7 +121,7 @@ module CPU(Clk, reset, PCResult, EX_ALUResult, Hi, Lo);
 	
 	wire [31:0] EX_ALUResult;
 	wire EX_ZeroFlag;
-	ALU32Bit ALU(EX_ALUControl, ALUSrcMuxResult_1, ALUSrcMuxResult_2, EX_ALUResult, EX_ZeroFlag, ALUResult_64bit);
+	ALU32Bit ALU(EX_ALUControl, ALUSrcMuxResult_1, ALUSrcMuxResult_2, EX_ALUResult, EX_ZeroFlag, Hi, Lo, ALUResult_64bit);
 	assign Hi = ALUResult_64bit[63:32];
 	assign Lo = ALUResult_64bit[31:0];
 	wire [4:0] EX_WriteRegister;

@@ -62,10 +62,10 @@
 // 
 ////////////////////////////////////////////////////////////////////////////////
 
-module ALU32Bit(ALUControl, A, B, Temp_ALUResult, Temp_Zero, Temp_64bit_ALUResult);
+module ALU32Bit(ALUControl, A, B, Temp_ALUResult, Temp_Zero, Hi, Lo, Temp_64bit_ALUResult);
 
 	input [4:0] ALUControl; 
-	input [31:0] A, B;	    
+	input [31:0] A, B, Hi, Lo;	    
 	
 	output reg [31:0] Temp_ALUResult;
 	output reg [63:0] Temp_64bit_ALUResult;
@@ -112,12 +112,12 @@ module ALU32Bit(ALUControl, A, B, Temp_ALUResult, Temp_Zero, Temp_64bit_ALUResul
         case(ALUControl) 
 			// Originl Operations
             ADD: Temp_ALUResult = $signed(A) + $signed(B); 
-            ADDU: Temp_ALUResult = A + B;
+            ADDU: Temp_ALUResult = $unsigned(A) + $unsigned(B);
 			SUB: Temp_ALUResult = $signed(A) - $signed(B);
             AND: Temp_ALUResult = A & B;
             OR: Temp_ALUResult = A | B;
 			SLT: Temp_ALUResult = $signed(A) < $signed(B);
-			SLTU: Temp_ALUResult = A < B; 
+			SLTU: Temp_ALUResult = $unsigned(A) < $unsigned(B); 
             XOR: Temp_ALUResult = A ^ B;
             NOR: Temp_ALUResult = ~(A | B);
             MUL: begin 
@@ -148,9 +148,11 @@ module ALU32Bit(ALUControl, A, B, Temp_ALUResult, Temp_Zero, Temp_64bit_ALUResul
             MFHI: Temp_ALUResult = $signed(Temp_64bit_ALUResult[63:32]); // Move from High
 			MFLO: Temp_ALUResult = $signed(Temp_64bit_ALUResult[31:0]); // Move from Low
 			
-			MADD: Temp_64bit_ALUResult = $signed(Temp_64bit_ALUResult) + ( $signed(A) * $signed(B) ); 
+			//MADD: Temp_64bit_ALUResult = $signed(Temp_64bit_ALUResult) + ( $signed(A) * $signed(B) ); 
+			MADD: Temp_64bit_ALUResult = $signed({Hi, Lo}) + ( $signed(A) * $signed(B) ); 
 			
-			MSUB: Temp_64bit_ALUResult = $signed(Temp_64bit_ALUResult) - ( $signed(A) * $signed(B) ); 
+			//MSUB: Temp_64bit_ALUResult = $signed(Temp_64bit_ALUResult) - ( $signed(A) * $signed(B) );
+			MSUB: Temp_64bit_ALUResult = $signed({Hi, Lo}) - ( $signed(A) * $signed(B) ); 
 			// Other Operations
 			SEB: Temp_ALUResult = {{24{B[7]}}, B[7:0]};
 			/*
